@@ -1,16 +1,58 @@
-# React + Vite
+# 🚗 Performance Garage – React Product Viewer
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+## 📌 Description
+This project is a simple React-based web application developed as part of Lab Experiment 4. It fetches product/item data from an API and displays them dynamically using reusable components.
 
-Currently, two official plugins are available:
+Each item is displayed as a separate component with its own structure, demonstrating component-based architecture in React.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## 🎯 Aim
+To create a simple React application that displays a list of items fetched from an API using the Fetch API.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## 🧩 Features
+- Fetch data using Fetch API
+- Display items dynamically
+- Component-based structure (Item component)
+- Responsive UI using React + Vite
+- Clean and modular code
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+---
+
+## 🛠️ Tech Stack
+- React.js
+- Vite
+- JavaScript (ES6)
+- CSS
+
+---
+
+## 📁 Project Structure
+- `App.jsx` → Main component (handles API fetching)
+- `Item.jsx` → Displays individual item
+- `public/` → Static assets
+- `src/` → Source code
+
+---
+
+## 🚀 Live Demo
+https://performance-garage-bc.vercel.app/
+
+---
+
+## 💻 GitHub Repository
+https://github.com/BhaveshChuryai/performance-garage-bc
+
+---
+
+## 📸 Output Screenshots
+(Add your screenshots here)
+
+---
+
+## ✅ Conclusion
+This project demonstrates how to use React for building dynamic user interfaces by fetching data from an API and rendering it using reusable components. It also highlights the use of modern frontend tools like Vite for fast development.
+
+---
