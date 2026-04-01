@@ -4,7 +4,7 @@ import { SkeletonGrid } from "./SkeletonCard";
 
 const FILTERS = ["all","hypercar","supercar","sport","electric"];
 
-export default function Fleet({ cars, wish, cart, compareList, search, setSearch, activeFilter, setFilter, onWish, onCart, onCompare, onCardClick, loading }) {
+export default function Fleet({ cars, wish, cart, compareList, search, setSearch, activeFilter, setFilter, onWish, onCart, onCompare, onCardClick, onQuickView, loading }) {
   const [filterOpen, setFilterOpen] = useState(false);
 
   return (
@@ -57,6 +57,7 @@ export default function Fleet({ cars, wish, cart, compareList, search, setSearch
                   inWish={wish.includes(car.id)} inCart={cart.includes(car.id)}
                   inCompare={!!compareList.find(c=>c.id===car.id)}
                   onWish={onWish} onCart={onCart} onCompare={onCompare} onCardClick={onCardClick}
+                  onQuickView={onQuickView}
                 />
               ))}
             </div>

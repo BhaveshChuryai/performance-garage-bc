@@ -13,7 +13,7 @@ export default function Navbar({ cartCount, onCartClick, onSavedClick, savedCoun
   return (
     <nav className={`pg-nav ${scrolled ? "scrolled" : ""}`}>
       <div className="pg-logo" onClick={onHome} style={{cursor:"pointer"}}>
-        PERFORMANCE<span> GARAGE</span>
+        BC PERFORMANCE<span> GARAGE</span>
       </div>
 
       {/* Desktop links */}
