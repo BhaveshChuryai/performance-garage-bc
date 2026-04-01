@@ -7,7 +7,9 @@ import Fleet from "./components/Fleet";
 import Analytics from "./components/Analytics";
 import CarDetail from "./components/CarDetail";
 import Checkout from "./components/Checkout";
+import SavedPage from "./components/SavedPage";
 import Modal, { CompareBar, CompareModal, Toast } from "./components/Modal";
+import FakeNotification from "./components/FakeNotification";
 import "./index.css";
 
 export const CARS = [
@@ -19,7 +21,7 @@ export const CARS = [
   { id:6,  brand:"Koenigsegg",   name:"Jesko",           cat:"hypercar", hp:1600, speed:531, zero:"2.5s",  torque:"1500 Nm", engine:"5.0L Biturbo V8",             price:"€2,800,000", badge:"Record",    desc:"Theoretical top speed of 531 km/h. Jesko Absolut engineered to claim the production car speed record.", tags:["Record","9-Speed","Absolut"],   grad:"linear-gradient(135deg,#0a0a0a,#001a0a)", img:"koenigsegg-jesko.jpg" },
   { id:7,  brand:"Aston Martin", name:"Valkyrie",        cat:"hypercar", hp:1160, speed:402, zero:"2.5s",  torque:"740 Nm",  engine:"6.5L NA V12 + KERS",          price:"€3,000,000", badge:"F1",        desc:"Born from an F1 partnership with Red Bull Racing. Adrian Newey designed the aerodynamics. Road legal. Barely.", tags:["F1-Inspired","Hybrid","Newey"], grad:"linear-gradient(135deg,#0a000a,#1a001a)", img:"aston-valkyrie.jpg" },
   { id:8,  brand:"Pagani",       name:"Huayra R",        cat:"hypercar", hp:850,  speed:370, zero:"2.8s",  torque:"750 Nm",  engine:"6.0L Twin-Turbo V12 AMG",     price:"€2,600,000", badge:null,        desc:"Artistic hypercar hand-crafted in Modena. Carbon-titanium monocoque and bespoke AMG engine.", tags:["Artisan","Carbon-Ti","AMG"],    grad:"linear-gradient(135deg,#0a0a00,#1a1a00)", img:"pagani-huayra.jpg" },
-  { id:9,  brand:"Nissan",       name:"GT-R Nismo",      cat:"sport",    hp:600,  speed:315, zero:"2.7s",  torque:"652 Nm",  engine:"3.8L Twin-Turbo V6",          price:"€210,000",   badge:null,        desc:"Godzilla refined. Hand-assembled VR38DETT engine producing 600 HP per technician.", tags:["AWD","ATTESA","Godzilla"],      grad:"linear-gradient(135deg,#0a0a0a,#1a0a00)", img:"nissan-gtr.jpg" },
+  { id:9,  brand:"Nissan",       name:"GT-R Nismo",      cat:"sport",    hp:600,  speed:315, zero:"2.7s",  torque:"652 Nm",  engine:"3.8L Twin-Turbo V6",          price:"€210,000",   badge:null,        desc:"Godzilla refined. Hand-assembled VR38DETT engine producing 600 HP.", tags:["AWD","ATTESA","Godzilla"],      grad:"linear-gradient(135deg,#0a0a0a,#1a0a00)", img:"nissan-gtr.jpg" },
   { id:10, brand:"Chevrolet",    name:"Corvette C8 Z06", cat:"supercar", hp:670,  speed:315, zero:"2.6s",  torque:"637 Nm",  engine:"5.5L NA Flat-Plane V8",       price:"€110,000",   badge:null,        desc:"America's mid-engine supercar. LT6 flat-plane V8 revs to 8,600 RPM.", tags:["Mid-Engine","Flat-Plane","V8"], grad:"linear-gradient(135deg,#1a0000,#2a0000)", img:"corvette-c8.jpg" },
   { id:11, brand:"BMW",          name:"M4 CSL",          cat:"sport",    hp:550,  speed:302, zero:"3.7s",  torque:"650 Nm",  engine:"3.0L Biturbo I6",             price:"€142,000",   badge:"Limited",   desc:"1000 units worldwide. Carbon fibre roof, stripped rear seats, Michelin Cup 2R tyres.", tags:["Limited","Carbon","Track"],     grad:"linear-gradient(135deg,#000a1a,#001030)", img:"bmw-m4.jpg" },
   { id:12, brand:"Audi",         name:"R8 V10 Plus",     cat:"supercar", hp:620,  speed:331, zero:"3.1s",  torque:"580 Nm",  engine:"5.2L NA V10",                 price:"€185,000",   badge:null,        desc:"A naturally aspirated V10 mid-engine supercar you can drive every day.", tags:["V10","Quattro","Daily Driver"], grad:"linear-gradient(135deg,#0a0a0a,#001a10)", img:"audi-r8.jpg" },
@@ -28,129 +30,157 @@ export const CARS = [
   { id:15, brand:"Rimac",        name:"Nevera",          cat:"electric", hp:1914, speed:412, zero:"1.85s", torque:"2360 Nm", engine:"4 x Electric Motors",         price:"€2,200,000", badge:"Electric",  desc:"The fastest accelerating production car ever. 1914 HP and four-motor torque vectoring.", tags:["Electric","Torque Vector","#1"], grad:"linear-gradient(135deg,#000a1a,#001a3a)", img:"rimac-nevera.jpg" },
 ];
 
+// localStorage helpers
+const LS = {
+  get: (k,d) => { try { const v=localStorage.getItem(k); return v?JSON.parse(v):d; } catch{ return d; } },
+  set: (k,v) => { try { localStorage.setItem(k,JSON.stringify(v)); } catch{} },
+};
+
 export default function App() {
-  const [wish,         setWish]         = useState([]);
-  const [cart,         setCart]         = useState([]);
+  const [wish,         setWish]         = useState(() => LS.get("pg_wish",[]));
+  const [cart,         setCart]         = useState(() => LS.get("pg_cart",[]));
   const [compareList,  setCompareList]  = useState([]);
   const [activeFilter, setActiveFilter] = useState("all");
   const [search,       setSearch]       = useState("");
-  const [modalCar,     setModalCar]     = useState(null);
   const [detailCar,    setDetailCar]    = useState(null);
   const [compareOpen,  setCompareOpen]  = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
+  const [showSaved,    setShowSaved]    = useState(false);
   const [toastMsg,     setToastMsg]     = useState("");
   const [toastVisible, setToastVisible] = useState(false);
+  const [loading,      setLoading]      = useState(true);
+  const [recentlyViewed, setRecentlyViewed] = useState(() => LS.get("pg_recent",[]));
+
+  // Persist to localStorage
+  useEffect(() => { LS.set("pg_wish",wish); }, [wish]);
+  useEffect(() => { LS.set("pg_cart",cart); }, [cart]);
+  useEffect(() => { LS.set("pg_recent",recentlyViewed); }, [recentlyViewed]);
+
+  // Simulate loading
+  useEffect(() => {
+    const t = setTimeout(() => setLoading(false), 1200);
+    return () => clearTimeout(t);
+  }, []);
+
+  // Cursor
+  useEffect(() => {
+    const cur=document.getElementById("pg-cursor");
+    const ring=document.getElementById("pg-ring");
+    if(!cur||!ring) return;
+    let rx=0,ry=0,cx=0,cy=0,raf;
+    const onMove=e=>{ cx=e.clientX; cy=e.clientY; cur.style.left=cx+"px"; cur.style.top=cy+"px"; };
+    document.addEventListener("mousemove",onMove);
+    const loop=()=>{ rx+=(cx-rx)*.12; ry+=(cy-ry)*.12; ring.style.left=rx+"px"; ring.style.top=ry+"px"; raf=requestAnimationFrame(loop); };
+    loop();
+    return ()=>{ document.removeEventListener("mousemove",onMove); cancelAnimationFrame(raf); };
+  },[]);
+
+  // Scroll reveal
+  useEffect(() => {
+    const obs=new IntersectionObserver(
+      entries=>entries.forEach(e=>{ if(e.isIntersecting) e.target.classList.add("visible"); }),
+      {threshold:0.12}
+    );
+    document.querySelectorAll(".reveal").forEach(el=>obs.observe(el));
+    return ()=>obs.disconnect();
+  },[detailCar,showCheckout,showSaved,loading]);
 
   const showToast = (msg) => {
     setToastMsg(msg); setToastVisible(true);
-    setTimeout(() => setToastVisible(false), 2200);
+    setTimeout(()=>setToastVisible(false),2200);
   };
 
   const toggleWish = (id) =>
-    setWish(prev => prev.includes(id)
-      ? (showToast("Removed from wishlist"), prev.filter(x => x !== id))
-      : (showToast("Saved to wishlist ♥"), [...prev, id]));
+    setWish(prev=>prev.includes(id)
+      ?(showToast("Removed from wishlist"),prev.filter(x=>x!==id))
+      :(showToast("Saved to wishlist ♥"),[...prev,id]));
 
   const toggleCart = (id) =>
-    setCart(prev => prev.includes(id)
-      ? (showToast("Removed from cart"), prev.filter(x => x !== id))
-      : (showToast("Added to cart ✓"), [...prev, id]));
+    setCart(prev=>prev.includes(id)
+      ?(showToast("Removed from cart"),prev.filter(x=>x!==id))
+      :(showToast("Added to cart ✓"),[...prev,id]));
 
   const toggleCompare = (car) =>
-    setCompareList(prev => {
-      if (prev.find(c => c.id === car.id)) return prev.filter(c => c.id !== car.id);
-      if (prev.length >= 2) { showToast("Max 2 cars"); return prev; }
-      return [...prev, car];
+    setCompareList(prev=>{
+      if(prev.find(c=>c.id===car.id)) return prev.filter(c=>c.id!==car.id);
+      if(prev.length>=2){ showToast("Max 2 cars to compare"); return prev; }
+      return [...prev,car];
     });
 
-  const filtered = CARS.filter(c =>
-    (activeFilter === "all" || c.cat === activeFilter) &&
-    (c.name.toLowerCase().includes(search.toLowerCase()) ||
+  const openDetail = (car) => {
+    setDetailCar(car);
+    setRecentlyViewed(prev=>{
+      const filtered=prev.filter(c=>c.id!==car.id);
+      return [car,...filtered].slice(0,8);
+    });
+    window.scrollTo(0,0);
+  };
+
+  const filtered = CARS.filter(c=>
+    (activeFilter==="all"||c.cat===activeFilter)&&
+    (c.name.toLowerCase().includes(search.toLowerCase())||
      c.brand.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const cartItems = CARS.filter(c => cart.includes(c.id));
+  const cartItems = CARS.filter(c=>cart.includes(c.id));
+  const goFleet = (val) => { setActiveFilter(val); setTimeout(()=>document.getElementById("fleet")?.scrollIntoView({behavior:"smooth"}),100); };
 
-  useEffect(() => {
-    const cur = document.getElementById("pg-cursor");
-    const ring = document.getElementById("pg-ring");
-    if (!cur || !ring) return;
-    let rx=0,ry=0,cx=0,cy=0,raf;
-    const onMove = e => { cx=e.clientX; cy=e.clientY; cur.style.left=cx+"px"; cur.style.top=cy+"px"; };
-    document.addEventListener("mousemove", onMove);
-    const loop = () => { rx+=(cx-rx)*.12; ry+=(cy-ry)*.12; ring.style.left=rx+"px"; ring.style.top=ry+"px"; raf=requestAnimationFrame(loop); };
-    loop();
-    return () => { document.removeEventListener("mousemove", onMove); cancelAnimationFrame(raf); };
-  }, []);
-
-  useEffect(() => {
-    const obs = new IntersectionObserver(
-      entries => entries.forEach(e => { if(e.isIntersecting) e.target.classList.add("visible"); }),
-      { threshold:0.12 }
-    );
-    document.querySelectorAll(".reveal").forEach(el => obs.observe(el));
-    return () => obs.disconnect();
-  }, [detailCar, showCheckout]);
-
-  const goFleet = (val) => { setActiveFilter(val); setTimeout(() => document.getElementById("fleet")?.scrollIntoView({ behavior:"smooth" }), 100); };
-
+  // ── PAGE ROUTING ──
   if (showCheckout) return (
-    <Checkout
-      cartItems={cartItems}
-      cart={cart}
-      onRemove={toggleCart}
-      onBack={() => setShowCheckout(false)}
-      showToast={showToast}
-      toastMsg={toastMsg}
-      toastVisible={toastVisible}
-    />
+    <Checkout cartItems={cartItems} cart={cart} onRemove={toggleCart}
+      onBack={()=>setShowCheckout(false)} showToast={showToast}
+      toastMsg={toastMsg} toastVisible={toastVisible}/>
+  );
+
+  if (showSaved) return (
+    <SavedPage savedIds={wish} cars={CARS} onBack={()=>setShowSaved(false)}
+      onCardClick={(car)=>{ setShowSaved(false); openDetail(car); }}
+      onRemove={toggleWish} onCart={toggleCart} cart={cart}/>
   );
 
   if (detailCar) return (
-    <CarDetail
-      car={detailCar}
-      inWish={wish.includes(detailCar.id)}
-      inCart={cart.includes(detailCar.id)}
-      inCompare={!!compareList.find(c => c.id === detailCar.id)}
-      onWish={toggleWish}
-      onCart={toggleCart}
-      onCompare={toggleCompare}
-      onBack={() => setDetailCar(null)}
-      onCheckout={() => { setShowCheckout(true); setDetailCar(null); }}
-      relatedCars={CARS.filter(c => c.cat === detailCar.cat && c.id !== detailCar.id).slice(0,3)}
-      onRelatedClick={setDetailCar}
-      showToast={showToast}
-      toastMsg={toastMsg}
-      toastVisible={toastVisible}
+    <CarDetail car={detailCar}
+      inWish={wish.includes(detailCar.id)} inCart={cart.includes(detailCar.id)}
+      inCompare={!!compareList.find(c=>c.id===detailCar.id)}
+      onWish={toggleWish} onCart={toggleCart} onCompare={toggleCompare}
+      onBack={()=>setDetailCar(null)}
+      onCheckout={()=>{ setShowCheckout(true); setDetailCar(null); }}
+      relatedCars={CARS.filter(c=>c.id!==detailCar.id)}
+      onRelatedClick={openDetail}
+      showToast={showToast} toastMsg={toastMsg} toastVisible={toastVisible}
+      recentlyViewed={recentlyViewed}
     />
   );
 
+  // ── MAIN PAGE ──
   return (
     <div className="pg-root">
-      <div id="pg-cursor" className="pg-cursor" />
-      <div id="pg-ring"   className="pg-ring"   />
+      <div id="pg-cursor" className="pg-cursor"/>
+      <div id="pg-ring"   className="pg-ring"/>
+      <FakeNotification/>
 
-      <Navbar cartCount={cart.length} onCartClick={() => setShowCheckout(true)} />
-      <Hero />
-      <Editorial />
-      <CategoryGrid setFilter={goFleet} />
+      <Navbar cartCount={cart.length} onCartClick={()=>setShowCheckout(true)}
+        onSavedClick={()=>setShowSaved(true)} savedCount={wish.length} onHome={()=>setDetailCar(null)}/>
+
+      <Hero/>
+      <Editorial/>
+      <CategoryGrid setFilter={goFleet}/>
       <Fleet
         cars={filtered} wish={wish} cart={cart} compareList={compareList}
         search={search} setSearch={setSearch}
         activeFilter={activeFilter} setFilter={setActiveFilter}
         onWish={toggleWish} onCart={toggleCart} onCompare={toggleCompare}
-        onCardClick={setDetailCar}
+        onCardClick={openDetail} loading={loading}
       />
-      <Analytics cars={CARS} />
+      <Analytics cars={CARS}/>
 
-      {modalCar && <Modal car={modalCar} onClose={() => setModalCar(null)} onCheckout={() => { setShowCheckout(true); setModalCar(null); }} />}
-      {compareList.length > 0 && (
-        <CompareBar compareList={compareList} onOpen={() => setCompareOpen(true)} onClear={() => setCompareList([])} />
+      {compareList.length>0&&(
+        <CompareBar compareList={compareList} onOpen={()=>setCompareOpen(true)} onClear={()=>setCompareList([])}/>
       )}
-      {compareOpen && compareList.length === 2 && (
-        <CompareModal cars={compareList} onClose={() => setCompareOpen(false)} />
+      {compareOpen&&compareList.length===2&&(
+        <CompareModal cars={compareList} onClose={()=>setCompareOpen(false)}/>
       )}
-      <Toast message={toastMsg} visible={toastVisible} />
+      <Toast message={toastMsg} visible={toastVisible}/>
 
       <footer className="pg-footer">
         <div className="footer-logo">Performance Garage</div>
